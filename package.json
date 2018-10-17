@@ -2,10 +2,14 @@
   "name": "svg2use",
   "version": "1.0.0",
   "description": "A simple lightweight nodejs library that replaces <use> tags in svg files with the corresponding element. Side effect: it will work perfectly in IE without polyfill.",
-  "main": "index.js",
+  "main": "svg2use.js",
   "scripts": {
-    "start": "node svg2use.js",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dancsee89/svg2use"
   },
   "keywords": [
     "svg",

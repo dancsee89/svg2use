@@ -7,13 +7,15 @@ async function svg2use(source = './source', target = './target') {
             fs.readdir(source, (err, files) => {
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
-                    const fileStream = fs.readFileSync(source + '/' + file, {encoding: 'utf8'});
-                    const parsedFile = parseSvg(fileStream);
+                    if (file.search('.svg') !== -1) {
+                        const fileStream = fs.readFileSync(source + '/' + file, {encoding: 'utf8'});
+                        const parsedFile = parseSvg(fileStream);
 
-                    fs.writeFile(target + '/' + file, parsedFile, (err) => {
-                        if (err)
-                            throw new Error(err);
-                    });
+                        fs.writeFile(target + '/' + file, parsedFile, (err) => {
+                            if (err)
+                                throw new Error(err);
+                        });
+                    }
                 }
             });
         } else {
@@ -41,4 +43,4 @@ function parseSvg(fileStream) {
     return document;
 }
 
-module.exports = svg2use();
+module.exports = svg2use;
