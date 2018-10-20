@@ -1,5 +1,7 @@
 const fs = require('fs');
-const domParser = require('xmldom').DOMParser;
+const xmldom = require('xmldom');
+
+const xlinkNS = 'http://www.w3.org/1999/xlink';
 
 async function svg2use(source = './source', target = './target') {
     try {
@@ -9,7 +11,7 @@ async function svg2use(source = './source', target = './target') {
                     const file = files[i];
                     if (file.search('.svg') !== -1) {
                         const fileStream = fs.readFileSync(source + '/' + file, {encoding: 'utf8'});
-                        const parsedFile = parseSvg(fileStream);
+                        const parsedFile = replaceUseTags(fileStream);
 
                         fs.writeFile(target + '/' + file, parsedFile, (err) => {
                             if (err)
@@ -26,21 +28,31 @@ async function svg2use(source = './source', target = './target') {
     }
 }
 
-function parseSvg(fileStream) {
-    let document = new domParser().parseFromString(fileStream);
-    const useTags = document.getElementsByTagName('use');
+function replaceUseTags(fileStream) {
+    try {
+        let document = new xmldom.DOMParser().parseFromString(fileStream);
+        const useTags = Array.from(document.getElementsByTagName('use'));
 
-    for (let i = 0; i < useTags.length; i++) {
-        let tag = useTags.item(i);
+        useTags.forEach(tag => {
+            const referencedId = tag.getAttributeNS(xlinkNS, 'href').split('#')[1];
+            let referencedElement = document.getElementById(referencedId).cloneNode();
 
-        const referencedId = tag.getAttribute('xlink:href').split('#')[1];
+            const useTagAttributes = Array.from(tag.attributes);
 
-        const referencedElement = document.getElementById(referencedId).cloneNode();
+            useTagAttributes.forEach(attribute => {
+                if (attribute.namespaceURI !== xlinkNS && attribute.localName !== 'href') {
+                    referencedElement.setAttribute(attribute.name, attribute.value);
+                }
+            });
 
-        document.replaceChild(referencedElement, tag);
+            document.replaceChild(referencedElement, tag);
+        });
+
+        return new xmldom.XMLSerializer().serializeToString(document);
+    } catch (error) {
+        console.error(`Couldn't replace use tags inside svg.`);
+        throw error;
     }
-
-    return document;
 }
 
 module.exports = svg2use;
